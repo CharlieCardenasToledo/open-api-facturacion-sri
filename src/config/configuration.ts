@@ -130,6 +130,11 @@ export default () => ({
     memoryRssMb: parseInt(optionalEnv('HEALTH_MEMORY_RSS_MB', '300'), 10),
   },
 
+  // Cache Configuration
+  cache: {
+    emisorTtlMs: parseInt(optionalEnv('CACHE_EMISOR_TTL_MS', '300000'), 10),
+  },
+
   // Queue options — BullMQ
   queues: {
     sriEmision: {
@@ -212,6 +217,9 @@ export interface AppConfig {
     pageSize: number;
   };
   healthChecks: { memoryHeapMb: number; memoryRssMb: number };
+  cache: {
+    emisorTtlMs: number;
+  };
   queues: {
     sriEmision: {
       attempts: number;

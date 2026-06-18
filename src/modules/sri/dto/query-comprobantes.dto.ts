@@ -150,10 +150,10 @@ export class ComprobanteResponseDto {
 export class PaginatedComprobantesDto {
   data: ComprobanteResponseDto[];
   meta: {
-    total: number;
+    total?: number;
     page: number;
     limit: number;
-    totalPages: number;
+    totalPages?: number;
   };
   nextCursor?: string | null;
   hasMore?: boolean;

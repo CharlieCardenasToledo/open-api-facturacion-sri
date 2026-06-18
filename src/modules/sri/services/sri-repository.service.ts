@@ -130,7 +130,7 @@ export class SriRepositoryService {
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {
     this.CACHE_TTL_MS = this.configService.get<number>(
-      'CACHE_EMISOR_TTL_MS',
+      'cache.emisorTtlMs',
       300000,
     ); // 5 min default (ms)
   }
@@ -519,20 +519,26 @@ export class SriRepositoryService {
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    let limitClause = '';
-    if (filters.cursor) {
-      // Keyset: limit + 1 para determinar si hay más páginas
-      limitClause = `LIMIT $${paramIndex++}`;
-      params.push(filters.limit + 1);
-    } else {
-      // Offset: paginación tradicional
-      const page = filters.page || 1;
-      const offset = (page - 1) * filters.limit;
-      limitClause = `LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
-      params.push(filters.limit, offset);
+    const filterParamsCount = params.length;
+
+    // Keyset: limit + 1 para determinar si hay más páginas
+    const limitClause = `LIMIT $${paramIndex++}`;
+    params.push(filters.limit + 1);
+
+    let total = 0;
+    if (!filters.cursor) {
+      const countResult = await this.db.query<{ count: string }>(
+        `SELECT COUNT(*) as count 
+         FROM comprobantes c
+         LEFT JOIN emisores e ON c.emisor_id = e.id
+         LEFT JOIN puntos_emision pe ON c.punto_emision_id = pe.id
+         LEFT JOIN establecimientos est ON pe.establecimiento_id = est.id
+         ${whereClause}`,
+        params.slice(0, filterParamsCount),
+      );
+      total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].count, 10) : 0;
     }
 
-    // Get data with pagination and total count in a single query
     const dataResult = await this.db.query<any>(
       `SELECT 
         c.id,
@@ -554,8 +560,7 @@ export class SriRepositoryService {
         est.codigo as establecimiento,
         pe.codigo as punto_emision,
         c.created_at,
-        c.updated_at,
-        COUNT(*) OVER() AS full_count
+        c.updated_at
       FROM comprobantes c
       LEFT JOIN emisores e ON c.emisor_id = e.id
       LEFT JOIN puntos_emision pe ON c.punto_emision_id = pe.id
@@ -566,10 +571,6 @@ export class SriRepositoryService {
       params,
     );
 
-    const total =
-      dataResult.rows.length > 0
-        ? parseInt(dataResult.rows[0].full_count, 10)
-        : 0;
     return { data: dataResult.rows, total };
   }
 
@@ -642,9 +643,15 @@ export class SriRepositoryService {
         [comprobanteId],
       );
       return result.rows;
-    } catch (error: any) {
-      // Only suppress "table does not exist" (42P01); re-throw everything else
-      if (error.code === '42P01') return [];
+    } catch (error: unknown) {
+      // Only suppress "table does not exist" (42P01) but log it; re-throw everything else
+      const dbError = error as { code?: string; message?: string };
+      if (dbError.code === '42P01') {
+        this.logger.warn(
+          `La tabla 'info_adicional' no existe. Retornando array vacío. Detalle: ${dbError.message || error}`,
+        );
+        return [];
+      }
       throw error;
     }
   }

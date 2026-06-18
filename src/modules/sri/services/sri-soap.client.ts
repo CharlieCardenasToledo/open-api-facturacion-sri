@@ -101,14 +101,41 @@ export class SriSoapClient {
 
     const ambiente = claveAcceso.charAt(23) as '1' | '2';
 
-    // Paso 1: Validar comprobante (Recepción) — sin reintentos propios, red-level retry
+    const recepcionDelayMs = this.configService.get<number>(
+      'sri.rateLimiting.recepcion.delayMs', 2000,
+    );
+
+    let recepcion: SriRecepcionResponse | null = null;
+    let ultimoError: unknown = null;
+
     this.logger.log(
       `Recepción: máx ${recepcionRetries} intentos para ...${claveAcceso.slice(-8)}`,
     );
-    const recepcion = await this.validarComprobante(xmlFirmado, ambiente);
 
-    if (recepcion.estado === 'DEVUELTA') {
-      const mensajes = this.extractMensajes(recepcion);
+    for (let intento = 1; intento <= recepcionRetries; intento++) {
+      try {
+        if (intento > 1) {
+          await this.delayWithBackoff(recepcionDelayMs, intento, 1.5);
+        }
+        recepcion = await this.validarComprobante(xmlFirmado, ambiente);
+        ultimoError = null;
+        break;
+      } catch (error: unknown) {
+        ultimoError = error;
+        this.logger.warn(
+          `Intento ${intento}/${recepcionRetries} de recepción fallido por error de red: ${
+            error instanceof Error ? error.message : error
+          }`,
+        );
+      }
+    }
+
+    if (ultimoError) {
+      throw ultimoError;
+    }
+
+    if (!recepcion || recepcion.estado === 'DEVUELTA') {
+      const mensajes = recepcion ? this.extractMensajes(recepcion) : [];
       return {
         success: false,
         claveAcceso,

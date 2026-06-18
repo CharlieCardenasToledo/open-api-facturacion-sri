@@ -12,28 +12,7 @@ import {
   IsUUID,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-
-export class QueryEmisoresDto {
-  @ApiPropertyOptional({
-    description: 'Cursor (UUID) para paginación keyset (ID del último emisor de la página anterior)',
-  })
-  @IsOptional()
-  @IsUUID()
-  cursor?: string;
-
-  @ApiPropertyOptional({
-    description: 'Cantidad máxima de registros a retornar',
-    default: 20,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  limit?: number = 20;
-}
-
+import { Type, Transform } from 'class-transformer';
 
 // Enums estrictos para ambiente y estado
 export enum EmisorAmbiente {
@@ -47,6 +26,41 @@ export enum EmisorAmbiente {
 export enum EmisorEstado {
   ACTIVO = 'ACTIVO',
   INACTIVO = 'INACTIVO',
+}
+
+export class QueryEmisoresDto {
+  @ApiPropertyOptional({
+    description: 'Cursor (UUID) para paginación keyset (ID del último emisor de la página anterior)',
+  })
+  @IsOptional()
+  @IsUUID()
+  cursor?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filtrar por estado del emisor',
+    enum: EmisorEstado,
+  })
+  @IsOptional()
+  @IsEnum(EmisorEstado)
+  estado?: EmisorEstado;
+
+  @ApiPropertyOptional({
+    description: 'Filtrar por tenant ID',
+  })
+  @IsOptional()
+  @IsUUID()
+  tenantId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Cantidad máxima de registros a retornar',
+    default: 20,
+  })
+  @IsOptional()
+  @Transform(({ value }) => value !== undefined ? parseInt(String(value), 10) : 20)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number;
 }
 
 export class CreateEmisorDto {

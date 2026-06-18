@@ -12,6 +12,7 @@ import {
   EmisorResponseDto,
   QueryEmisoresDto,
   PaginatedEmisoresResponseDto,
+  EmisorEstado,
 } from './dto';
 import * as forge from 'node-forge';
 import { EncryptionService } from '../../common/services/encryption.service';
@@ -78,6 +79,14 @@ export class EmisoresService {
     const conditions: string[] = [];
     const params: unknown[] = [];
 
+    // Default to ACTIVO state filter to avoid leakage of inactives by default
+    const estado = query.estado ?? EmisorEstado.ACTIVO;
+    conditions.push(`estado = $${params.push(estado)}`);
+
+    if (query.tenantId) {
+      conditions.push(`tenant_id = $${params.push(query.tenantId)}`);
+    }
+
     if (cursor) {
       conditions.push(`id > $${params.push(cursor)}`);
     }
@@ -113,6 +122,10 @@ export class EmisoresService {
 
     const conditions: string[] = [`tenant_id = $1`];
     const params: unknown[] = [tenantId];
+
+    // Default to ACTIVO state filter
+    const estado = query.estado ?? EmisorEstado.ACTIVO;
+    conditions.push(`estado = $${params.push(estado)}`);
 
     if (cursor) {
       conditions.push(`id > $${params.push(cursor)}`);
@@ -287,11 +300,8 @@ export class EmisoresService {
         ruc, razon_social, nombre_comercial, direccion_matriz,
         obligado_contabilidad, contribuyente_especial, agente_retencion,
         contribuyente_rimpe, ambiente, estado, tenant_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'ACTIVO', $10)
-      RETURNING ${EmisoresService.EMISOR_COLUMNS}`.replace(
-        'certificado_p12 IS NOT NULL as tiene_certificado',
-        'false as tiene_certificado',
-      ),
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING id`,
       [
         dto.ruc,
         dto.razonSocial,
@@ -302,12 +312,13 @@ export class EmisoresService {
         dto.agenteRetencion || null,
         dto.contribuyenteRimpe ?? false,
         this.toAmbienteCodigo(dto.ambiente),
+        EmisorEstado.ACTIVO,
         dto.tenantId || null,
       ],
     );
 
     this.logger.log(`Emisor creado: ${dto.ruc} - ${dto.razonSocial}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.findOne(result.rows[0].id);
   }
 
   async update(id: string, dto: UpdateEmisorDto): Promise<EmisorResponseDto> {
@@ -366,17 +377,12 @@ export class EmisoresService {
     const result = await this.db.query(
       `UPDATE emisores SET ${updates.join(', ')}
        WHERE id = $${paramIndex}
-       RETURNING id, ruc, razon_social, nombre_comercial, direccion_matriz,
-                 obligado_contabilidad, contribuyente_especial, agente_retencion,
-                 contribuyente_rimpe, ambiente, estado,
-                 certificado_p12 IS NOT NULL as tiene_certificado,
-                 certificado_valido_hasta, certificado_sujeto,
-                 created_at, updated_at`,
+       RETURNING id`,
       values,
     );
 
     this.logger.log(`Emisor actualizado: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.findOne(id);
   }
 
   async delete(id: string): Promise<EmisorResponseDto> {
@@ -389,22 +395,17 @@ export class EmisoresService {
     }
 
     // Eliminación lógica: cambiar estado a inactivo
-    const result = await this.db.query(
+    await this.db.query(
       `UPDATE emisores SET
         estado = 'INACTIVO',
         updated_at = NOW()
        WHERE id = $1
-       RETURNING id, ruc, razon_social, nombre_comercial, direccion_matriz,
-                 obligado_contabilidad, contribuyente_especial, agente_retencion,
-                 contribuyente_rimpe, ambiente, estado,
-                 certificado_p12 IS NOT NULL as tiene_certificado,
-                 certificado_valido_hasta, certificado_sujeto,
-                 created_at, updated_at`,
+       RETURNING id`,
       [id],
     );
 
     this.logger.log(`Emisor inactivado: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.findOne(id);
   }
 
   async uploadCertificado(
@@ -426,7 +427,7 @@ export class EmisoresService {
     }
 
     // Guardar el certificado
-    const result = await this.db.query(
+    await this.db.query(
       `UPDATE emisores SET
         certificado_p12 = $1,
         certificado_password = $2,
@@ -435,12 +436,7 @@ export class EmisoresService {
         certificado_updated_at = NOW(),
         updated_at = NOW()
        WHERE id = $5
-       RETURNING id, ruc, razon_social, nombre_comercial, direccion_matriz,
-                 obligado_contabilidad, contribuyente_especial, agente_retencion,
-                 contribuyente_rimpe, ambiente, estado,
-                 true as tiene_certificado,
-                 certificado_valido_hasta, certificado_sujeto,
-                 created_at, updated_at`,
+       RETURNING id`,
       [
         file,
         await this.encryptionService.encrypt(password),
@@ -451,14 +447,14 @@ export class EmisoresService {
     );
 
     this.logger.log(`Certificado cargado para emisor: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.findOne(id);
   }
 
   async deleteCertificado(id: string): Promise<EmisorResponseDto> {
     // Verificar que existe
     await this.findOne(id);
 
-    const result = await this.db.query(
+    await this.db.query(
       `UPDATE emisores SET
         certificado_p12 = NULL,
         certificado_password = NULL,
@@ -467,17 +463,12 @@ export class EmisoresService {
         certificado_updated_at = NULL,
         updated_at = NOW()
        WHERE id = $1
-       RETURNING id, ruc, razon_social, nombre_comercial, direccion_matriz,
-                 obligado_contabilidad, contribuyente_especial, agente_retencion,
-                 contribuyente_rimpe, ambiente, estado,
-                 false as tiene_certificado,
-                 null as certificado_valido_hasta, null as certificado_sujeto,
-                 created_at, updated_at`,
+       RETURNING id`,
       [id],
     );
 
     this.logger.log(`Certificado eliminado para emisor: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.findOne(id);
   }
 
   private extractCertificateInfo(

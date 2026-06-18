@@ -1,6 +1,6 @@
 import { IsString, IsOptional, IsNotEmpty, IsEnum, IsInt, Min, Max, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 
 // Enums para validación estricta de valores permitidos
 export enum TenantPlan {
@@ -44,11 +44,11 @@ export class QueryTenantsDto {
     default: 20,
   })
   @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => value !== undefined ? parseInt(String(value), 10) : 20)
   @IsInt()
   @Min(1)
   @Max(100)
-  limit?: number = 20;
+  limit?: number;
 }
 
 

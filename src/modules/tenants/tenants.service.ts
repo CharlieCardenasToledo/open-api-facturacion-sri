@@ -14,6 +14,7 @@ import {
   TenantResponseDto,
   QueryTenantsDto,
   PaginatedTenantsResponseDto,
+  TenantEstado,
 } from './dto';
 
 @Injectable()
@@ -95,9 +96,9 @@ export class TenantsService {
 
     const result = await this.db.query(
       `INSERT INTO tenants (nombre, plan, estado)
-       VALUES ($1, $2, 'ACTIVO')
+       VALUES ($1, $2, $3)
        RETURNING id, nombre, plan, estado, created_at, updated_at`,
-      [dto.nombre, dto.plan ?? planDefault],
+      [dto.nombre, dto.plan ?? planDefault, TenantEstado.ACTIVO],
     );
 
     this.logger.log(`Tenant creado: ${dto.nombre}`);
@@ -186,7 +187,7 @@ export class TenantsService {
       estado: row.estado as string,
       createdAt: (row.created_at as Date)?.toISOString(),
       updatedAt: (row.updated_at as Date)?.toISOString(),
-      emisoresCount: parseInt(String(row.emisores_count)) || 0,
+      emisoresCount: Number(row.emisores_count) || 0,
     };
   }
 }
