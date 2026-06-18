@@ -8,7 +8,7 @@ import {
 import Redis from 'ioredis';
 
 /**
- * STATUS-01: Health check para Redis.
+ * Health check para Redis.
  * BullMQ depende completamente de Redis — si falla, las colas se detienen silenciosamente.
  * Lee la configuración desde redis.* de configuration.ts.
  */

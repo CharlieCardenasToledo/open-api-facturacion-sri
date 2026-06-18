@@ -85,7 +85,7 @@ export class TenantsService {
   }
 
   async create(dto: CreateTenantDto): Promise<TenantResponseDto> {
-    // TENANT-03: El plan por defecto viene de configuración, nunca hardcodeado
+    // El plan por defecto viene de la configuración centralizada
     const planDefault = this.configService.get<string>('tenants.defaultPlan');
     if (!planDefault) {
       throw new InternalServerErrorException(
@@ -149,7 +149,7 @@ export class TenantsService {
       throw new BadRequestException(`El tenant ya se encuentra inactivo`);
     }
 
-    // TENANT-04: Bloquear inactivación si tiene emisores activos (configurable)
+    // Bloquear inactivación si tiene emisores activos (comportamiento configurable)
     const allowDeleteWithEmisores = this.configService.get<boolean>(
       'tenants.allowDeleteWithEmisores',
       false,

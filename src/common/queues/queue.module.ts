@@ -4,14 +4,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 /**
  * Módulo global de colas con BullMQ + Redis.
- * QUEUE-01: Lee la conexión Redis desde la sección redis.* de configuration.ts
- *           en vez de ENV vars directas para consistencia.
- * QUEUE-02: Opciones de cola parametrizables desde configuration.ts / ENV.
+ * Lee la conexión Redis desde la sección redis.* de configuration.ts
+ * en vez de ENV vars directas para consistencia.
+ * Opciones de cola parametrizables desde configuration.ts / ENV.
  */
 @Global()
 @Module({
   imports: [
-    // QUEUE-01: Conexión a Redis usando sección centralizada de configuration.ts
+    // Conexión a Redis usando sección centralizada de configuration.ts
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -26,7 +26,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       }),
     }),
 
-    // QUEUE-02: Cola de emisión SRI — opciones parametrizables desde ENV
+    // Cola de emisión SRI — opciones parametrizables desde ENV
     BullModule.registerQueueAsync({
       name: 'sri-emision',
       imports: [ConfigModule],
@@ -48,7 +48,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       }),
     }),
 
-    // QUEUE-02: Cola de webhook dispatch — opciones parametrizables desde ENV
+    // Cola de webhook dispatch — opciones parametrizables desde ENV
     BullModule.registerQueueAsync({
       name: 'webhook-dispatch',
       imports: [ConfigModule],

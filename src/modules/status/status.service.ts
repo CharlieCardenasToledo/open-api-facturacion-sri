@@ -12,7 +12,7 @@ export interface StatusResponse {
     directories: Record<string, boolean>;
     fileCount: Record<string, number>;
     templates: string[];
-    // STATUS-04: No exponer URLs internas ni config sensible en endpoint público
+    // No exponer URLs internas ni config sensible en endpoint público
   };
 }
 
@@ -22,7 +22,7 @@ export class StatusService {
 
   /**
    * Get server status
-   * STATUS-04: No se retorna carboneApi, publicUrl ni ninguna configuración interna.
+   * No se retorna carboneApi, publicUrl ni ninguna configuración interna.
    * El endpoint /status es @Public() — solo expone estado operacional.
    */
   getStatus(): StatusResponse {

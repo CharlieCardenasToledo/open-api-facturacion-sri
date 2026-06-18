@@ -9,6 +9,7 @@ import {
   IsInt,
   Min,
   Max,
+  IsUUID,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -18,7 +19,7 @@ export class QueryEmisoresDto {
     description: 'Cursor (UUID) para paginación keyset (ID del último emisor de la página anterior)',
   })
   @IsOptional()
-  @IsString()
+  @IsUUID()
   cursor?: string;
 
   @ApiPropertyOptional({
@@ -34,7 +35,7 @@ export class QueryEmisoresDto {
 }
 
 
-// EMISOR-02 / EMISOR-03: Enums estrictos para ambiente y estado
+// Enums estrictos para ambiente y estado
 export enum EmisorAmbiente {
   PRUEBAS = 'pruebas',
   PRODUCCION = 'produccion',

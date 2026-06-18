@@ -50,7 +50,7 @@ export default () => ({
         : '',
       certPassword: optionalEnv('SRI_SIGNATURE_CERT_PASSWORD', ''),
     },
-    // Rate limiting parametrizable por tipo de operación (SOAP-01)
+    // Rate limiting parametrizable por tipo de operación
     rateLimiting: {
       recepcion: {
         retries:   parseInt(optionalEnv('SRI_RECEPCION_RETRIES', '3'), 10),
@@ -116,7 +116,7 @@ export default () => ({
     xmls: resolveDir(requireEnv('XMLS_DIR')),
   },
 
-  // Tenants configuration (TENANT-03, TENANT-04)
+  // Tenants configuration
   tenants: {
     defaultPlan: optionalEnv('TENANT_DEFAULT_PLAN', 'BASICO'),
     allowDeleteWithEmisores:
@@ -124,13 +124,13 @@ export default () => ({
     pageSize: parseInt(optionalEnv('TENANTS_PAGE_SIZE', '20'), 10),
   },
 
-  // Health Checks thresholds (STATUS-02)
+  // Health Checks thresholds
   healthChecks: {
     memoryHeapMb: parseInt(optionalEnv('HEALTH_MEMORY_HEAP_MB', '150'), 10),
     memoryRssMb: parseInt(optionalEnv('HEALTH_MEMORY_RSS_MB', '300'), 10),
   },
 
-  // Queue options — BullMQ (QUEUE-01, QUEUE-02)
+  // Queue options — BullMQ
   queues: {
     sriEmision: {
       attempts: parseInt(optionalEnv('QUEUE_SRI_ATTEMPTS', '3'), 10),

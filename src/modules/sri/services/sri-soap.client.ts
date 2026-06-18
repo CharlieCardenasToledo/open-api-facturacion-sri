@@ -10,9 +10,8 @@ import {
 } from '../interfaces';
 
 /**
- * Cliente SOAP para comunicación con los servicios web del SRI Ecuador.
- * SOAP-01: Rate limiting parametrizable y separado por tipo de operación.
- *          Backoff exponencial real en vez de delay lineal.
+ * Rate limiting parametrizable y separado por tipo de operación.
+ * Backoff exponencial real en vez de delay lineal.
  */
 @Injectable()
 export class SriSoapClient {
@@ -79,8 +78,8 @@ export class SriSoapClient {
   }
 
   /**
-   * SOAP-01: Rate limiting separado por operación con backoff exponencial.
-   * Recepción y autorización tienen parámetros independientes en configuration.ts.
+   * Rate limiting separado por operación con backoff exponencial.
+   * Recepción y autorización tienen parámetros independientes en la configuración.
    */
   async enviarYAutorizar(
     xmlFirmado: string,
@@ -187,7 +186,7 @@ export class SriSoapClient {
   }
 
   /**
-   * SOAP-01: Backoff exponencial con cap de 30 segundos.
+   * Backoff exponencial con cap de 30 segundos.
    * delay(ms) = min(baseMs × multiplier^(intento-1), 30000)
    */
   private async delayWithBackoff(

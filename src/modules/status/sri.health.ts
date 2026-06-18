@@ -7,7 +7,7 @@ import {
 } from '@nestjs/terminus';
 
 /**
- * STATUS-03: Health check de conectividad SOAP al SRI Ecuador.
+ * Health check de conectividad SOAP al SRI Ecuador.
  * Hace un HEAD request al WSDL de recepción con timeout de 5s.
  * Útil para K8s readinessProbe: si el SRI es inalcanzable, el pod
  * no debería recibir tráfico de facturación.

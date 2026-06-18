@@ -6,7 +6,7 @@ import { redisStore } from 'cache-manager-ioredis-yet';
 /**
  * Módulo de caché distribuido con Redis.
  * Reemplaza Map in-memory para consistencia multi-nodo.
- * QUEUE-01 equivalent: Lee config desde redis.* de configuration.ts en vez de ENV directas.
+ * Lee la configuración desde redis.* de la configuración centralizada en vez de variables de entorno directas.
  * TTL configurable via CACHE_TTL_SECONDS (default: 300s = 5min).
  */
 @Global()

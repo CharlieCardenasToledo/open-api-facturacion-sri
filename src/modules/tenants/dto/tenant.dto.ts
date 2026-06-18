@@ -1,8 +1,8 @@
-import { IsString, IsOptional, IsNotEmpty, IsEnum, IsInt, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty, IsEnum, IsInt, Min, Max, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
-// TENANT-02: Enums para validación estricta de valores permitidos
+// Enums para validación estricta de valores permitidos
 export enum TenantPlan {
   BASICO = 'BASICO',
   PRO = 'PRO',
@@ -36,7 +36,7 @@ export class QueryTenantsDto {
     description: 'Cursor (UUID) para paginación (ID del último tenant obtenido en la página anterior)',
   })
   @IsOptional()
-  @IsString()
+  @IsUUID()
   cursor?: string;
 
   @ApiPropertyOptional({

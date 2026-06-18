@@ -26,7 +26,7 @@ export class SriRepositoryService {
   private readonly logger = new Logger(SriRepositoryService.name);
 
   // ==========================================
-  // CACHE DE EMISOR — Redis distribuido (REPO-01)
+  // CACHE DE EMISOR — Redis distribuido
   // Migrado de Map in-memory para consistencia multi-instancia.
   // ==========================================
   private readonly CACHE_TTL_MS: number;
@@ -140,7 +140,7 @@ export class SriRepositoryService {
   // ==========================================
 
   async findEmisorByRuc(ruc: string): Promise<EmisorRecord | null> {
-    // REPO-01: Verificar cache Redis distribuido
+    // Verificar cache Redis distribuido
     const cacheKey = `emisor:ruc:${ruc}`;
     const cached = await this.cacheManager.get<EmisorRecord>(cacheKey);
     if (cached) {
@@ -167,7 +167,7 @@ export class SriRepositoryService {
     establecimiento: string,
     puntoEmision: string,
   ): Promise<{ punto_emision_id: string; establecimiento_id: string } | null> {
-    // REPO-01: Verificar cache Redis distribuido
+    // Verificar cache Redis distribuido
     const cacheKey = `punto-emision:${emisorId}:${establecimiento}:${puntoEmision}`;
     const cached = await this.cacheManager.get<{ punto_emision_id: string; establecimiento_id: string }>(cacheKey);
     if (cached) {

@@ -28,9 +28,7 @@ export class StatusController {
 
   /**
    * GET /status
-   * STATUS-01: Agrega Redis health check
-   * STATUS-02: Memory thresholds parametrizables desde configuration.ts
-   * STATUS-03: Agrega SRI connectivity health check
+   * Verifica Redis health check, memory thresholds parametrizables y SRI connectivity health check
    */
   @Get('status')
   @HealthCheck()
@@ -40,7 +38,7 @@ export class StatusController {
     description: 'Estado del servidor, DB, Redis, memoria y conectividad SRI',
   })
   async getStatus() {
-    // STATUS-02: Thresholds de memoria desde configuración, no hardcodeados
+    // Thresholds de memoria desde configuración
     const heapMb = this.configService.get<number>('healthChecks.memoryHeapMb', 150);
     const rssMb  = this.configService.get<number>('healthChecks.memoryRssMb', 300);
 
@@ -50,10 +48,10 @@ export class StatusController {
     // Health checks reales
     const healthCheck = await this.health.check([
       () => this.db.isHealthy('database'),
-      () => this.redis.isHealthy('redis'),                               // STATUS-01
-      () => this.memory.checkHeap('memory_heap', heapMb * 1024 * 1024), // STATUS-02
-      () => this.memory.checkRSS('memory_rss',  rssMb  * 1024 * 1024), // STATUS-02
-      () => this.sri.isHealthy('sri_soap'),                             // STATUS-03
+      () => this.redis.isHealthy('redis'),
+      () => this.memory.checkHeap('memory_heap', heapMb * 1024 * 1024),
+      () => this.memory.checkRSS('memory_rss',  rssMb  * 1024 * 1024),
+      () => this.sri.isHealthy('sri_soap'),
     ]);
 
     return {

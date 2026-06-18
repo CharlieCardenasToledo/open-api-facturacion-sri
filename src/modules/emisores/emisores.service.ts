@@ -21,7 +21,7 @@ import { JwtPayload, UserRole } from '../auth/dto/auth.dto';
 export class EmisoresService {
   private readonly logger = new Logger(EmisoresService.name);
 
-  // EMISOR-04: Columnas SELECT extraídas como constante para evitar repetición
+  // Columnas SELECT extraídas como constante para evitar repetición
   private static readonly EMISOR_COLUMNS = `
     id, ruc, razon_social, nombre_comercial, direccion_matriz,
     obligado_contabilidad, contribuyente_especial, agente_retencion,
@@ -37,7 +37,7 @@ export class EmisoresService {
   ) {}
 
   /**
-   * EMISOR-02: Convierte ambiente legible a código SRI.
+   * Convierte ambiente legible a código SRI.
    * No tiene fallback silencioso — lanza BadRequestException si el valor es inválido.
    */
   private toAmbienteCodigo(ambiente: string): string {
@@ -64,7 +64,7 @@ export class EmisoresService {
   }
 
   /**
-   * EMISOR-03: Normaliza estado a mayúsculas.
+   * Normaliza estado a mayúsculas.
    * El valor ya viene validado por @IsEnum(EmisorEstado) en el DTO.
    */
   private toEstadoNormalizado(estado: string): string {
@@ -275,7 +275,7 @@ export class EmisoresService {
       throw new BadRequestException(`Ya existe un emisor con RUC ${dto.ruc}`);
     }
 
-    // EMISOR-02: Si no se especifica ambiente, lanza error explícito
+    // Si no se especifica ambiente, lanza error explícito
     if (!dto.ambiente) {
       throw new BadRequestException(
         'El campo ambiente es requerido. Use: pruebas, produccion, 1 ó 2',
@@ -352,7 +352,7 @@ export class EmisoresService {
     }
     if (dto.estado !== undefined) {
       updates.push(`estado = $${paramIndex++}`);
-      // EMISOR-03: El estado ya viene validado por @IsEnum en el DTO
+      // El estado ya viene validado por @IsEnum en el DTO
       values.push(this.toEstadoNormalizado(dto.estado));
     }
 
@@ -420,7 +420,7 @@ export class EmisoresService {
     try {
       certificateInfo = this.extractCertificateInfo(file, password);
     } catch (error: unknown) {
-      // EMISOR-05: Tipado correcto de error en catch
+      // Tipado correcto de error en catch
       const msg = error instanceof Error ? error.message : 'Error desconocido al procesar el certificado';
       throw new BadRequestException(`Error al procesar el certificado: ${msg}`);
     }

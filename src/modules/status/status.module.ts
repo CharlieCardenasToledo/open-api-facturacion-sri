@@ -15,8 +15,8 @@ import { SriHealthIndicator } from './sri.health';
   providers: [
     StatusService,
     DatabaseHealthIndicator,
-    RedisHealthIndicator,  // STATUS-01
-    SriHealthIndicator,    // STATUS-03
+    RedisHealthIndicator,
+    SriHealthIndicator,
   ],
 })
 export class StatusModule {}
