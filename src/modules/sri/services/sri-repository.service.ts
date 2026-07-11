@@ -464,7 +464,7 @@ export class SriRepositoryService {
     }
 
     if (filters.identificacionComprador) {
-      conditions.push(`c.identificacion_comprador = $${paramIndex++}`);
+      conditions.push(`c.receptor_identificacion = $${paramIndex++}`);
       params.push(filters.identificacionComprador);
     }
 
@@ -492,12 +492,12 @@ export class SriRepositoryService {
     }
 
     if (filters.establecimiento) {
-      conditions.push(`c.establecimiento = $${paramIndex++}`);
+      conditions.push(`est.codigo = $${paramIndex++}`);
       params.push(filters.establecimiento);
     }
 
     if (filters.puntoEmision) {
-      conditions.push(`c.punto_emision = $${paramIndex++}`);
+      conditions.push(`pe.codigo = $${paramIndex++}`);
       params.push(filters.puntoEmision);
     }
 

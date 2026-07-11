@@ -536,7 +536,7 @@ export class SriController {
           type: 'array',
           items: { type: 'string' },
           description: 'Estados a sincronizar',
-          example: ['PENDIENTE', 'EN_PROCESO', 'DEVUELTA'],
+          example: ['PENDIENTE', 'EN PROCESO', 'DEVUELTA'],
         },
         reintentar: {
           type: 'boolean',

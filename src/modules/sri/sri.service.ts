@@ -495,7 +495,7 @@ export class SriService {
       'DEVUELTA',
       'RECHAZADO',
       'PENDIENTE',
-      'EN_PROCESO',
+      'EN PROCESO',
     ];
     if (!estadosReintentables.includes(estadoActual)) {
       throw new BadRequestException(
@@ -690,7 +690,7 @@ export class SriService {
       accion: string;
     }>;
   }> {
-    const estados = options.estados || ['PENDIENTE', 'EN_PROCESO', 'DEVUELTA'];
+    const estados = options.estados || ['PENDIENTE', 'EN PROCESO', 'DEVUELTA'];
     const reintentar = options.reintentar || false;
     const limiteGlobal = Math.min(
       options.limite || 200,
