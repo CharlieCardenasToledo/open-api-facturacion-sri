@@ -9,6 +9,7 @@ import {
   Query,
   Logger,
   NotFoundException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -113,7 +114,7 @@ export class WebhooksController {
   })
   @ApiResponse({ status: 404, description: 'Webhook no encontrado' })
   async findOne(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<WebhookResponseDto> {
     await this.validateWebhookOwnership(id, user);
@@ -148,7 +149,7 @@ export class WebhooksController {
   })
   @ApiResponse({ status: 404, description: 'Webhook no encontrado' })
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateWebhookDto,
     @CurrentUser() user: JwtPayload,
   ): Promise<WebhookResponseDto> {
@@ -168,7 +169,7 @@ export class WebhooksController {
     description: 'Webhook no encontrado o ya inactivo',
   })
   async delete(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<WebhookResponseDto> {
     await this.validateWebhookOwnership(id, user);
@@ -184,7 +185,7 @@ export class WebhooksController {
   })
   @ApiResponse({ status: 404, description: 'Webhook no encontrado' })
   async regenerateSecret(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<WebhookResponseDto> {
     await this.validateWebhookOwnership(id, user);
@@ -211,7 +212,7 @@ export class WebhooksController {
   })
   @ApiResponse({ status: 404, description: 'Webhook no encontrado' })
   async getLogs(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
     @Query('page') page?: number,
     @Query('limit') limit?: number,

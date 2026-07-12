@@ -8,6 +8,7 @@ import {
   Param,
   Logger,
   Query,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -62,7 +63,7 @@ export class EmisoresController {
   })
   @ApiResponse({ status: 404, description: 'Emisor no encontrado' })
   async findOne(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<EmisorResponseDto> {
     return this.emisoresService.findOneSecured(id, user);
@@ -96,7 +97,7 @@ export class EmisoresController {
   })
   @ApiResponse({ status: 404, description: 'Emisor no encontrado' })
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateEmisorDto,
     @CurrentUser() user: JwtPayload,
   ): Promise<EmisorResponseDto> {
@@ -115,7 +116,7 @@ export class EmisoresController {
   @ApiResponse({ status: 400, description: 'Emisor ya está inactivo' })
   @ApiResponse({ status: 404, description: 'Emisor no encontrado' })
   async delete(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<EmisorResponseDto> {
     await this.emisoresService.findOneSecured(id, user);

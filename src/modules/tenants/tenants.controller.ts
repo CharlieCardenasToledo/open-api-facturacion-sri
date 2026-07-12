@@ -8,6 +8,7 @@ import {
   Param,
   Logger,
   Query,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -56,7 +57,7 @@ export class TenantsController {
     type: TenantResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Tenant no encontrado' })
-  async findOne(@Param('id') id: string): Promise<TenantResponseDto> {
+  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<TenantResponseDto> {
     return this.tenantsService.findOne(id);
   }
 
@@ -80,7 +81,7 @@ export class TenantsController {
   })
   @ApiResponse({ status: 404, description: 'Tenant no encontrado' })
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateTenantDto,
   ): Promise<TenantResponseDto> {
     return this.tenantsService.update(id, dto);
@@ -95,7 +96,7 @@ export class TenantsController {
   })
   @ApiResponse({ status: 400, description: 'Tenant ya está inactivo' })
   @ApiResponse({ status: 404, description: 'Tenant no encontrado' })
-  async delete(@Param('id') id: string): Promise<TenantResponseDto> {
+  async delete(@Param('id', ParseUUIDPipe) id: string): Promise<TenantResponseDto> {
     return this.tenantsService.delete(id);
   }
 }
