@@ -41,7 +41,7 @@ import { EncryptionService } from '../../common/services/encryption.service';
 import { XmlSignerService } from '../sri/services/xml-signer.service';
 import { EmisoresService } from '../emisores/emisores.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { JwtPayload } from '../auth/dto/auth.dto';
+import { JwtPayload, UserRole } from '../auth/dto/auth.dto';
 
 @ApiTags('Certificates')
 @ApiBearerAuth('JWT')
@@ -100,7 +100,10 @@ export class CertificateController {
   @ApiParam({ name: 'fileName', description: 'Nombre del archivo .p12' })
   @ApiResponse({ status: 200, description: 'Certificado eliminado' })
   @ApiResponse({ status: 404, description: 'Certificado no encontrado' })
-  async deleteCertificate(@Param('fileName') fileName: string) {
+  async deleteCertificate(
+    @Param('fileName') fileName: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     if (!fileName || !fileName.toLowerCase().endsWith('.p12')) {
       throw new BadRequestException(
         'Nombre de archivo inválido. Debe tener extensión .p12',
@@ -109,6 +112,16 @@ export class CertificateController {
 
     if (!this.certificateService.certificateExists(fileName)) {
       throw new NotFoundException(`El certificado ${fileName} no existe`);
+    }
+
+    if (user.rol !== UserRole.SUPERADMIN) {
+      const owner = await this.db.queryOne<{ tenant_id: string | null }>(
+        `SELECT tenant_id FROM emisores WHERE certificado_nombre = $1 LIMIT 1`,
+        [fileName],
+      );
+      if (!owner || !owner.tenant_id || owner.tenant_id !== user.tenantId) {
+        throw new NotFoundException(`El certificado ${fileName} no existe`);
+      }
     }
 
     // Limpiar datos del certificado en la tabla emisores
