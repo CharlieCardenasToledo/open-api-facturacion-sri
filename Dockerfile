@@ -53,6 +53,13 @@ COPY --from=builder /app/dist ./dist
 RUN mkdir -p /data/templates /data/pdfs /data/certs /data/xmls \
     /data/pdfs/con_firma /data/pdfs/others /data/pdfs/documents /data/pdfs/images
 
+# Create non-root user for least privilege (CWE-250, OWASP A05:2021)
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup && \
+    chown -R appuser:appgroup /app /data
+
+USER appuser
+
 # Expose the application port
 EXPOSE 3001
 
