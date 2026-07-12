@@ -135,7 +135,7 @@ export class WebhooksService {
     );
 
     this.logger.log(`Webhook creado: ${dto.nombre} -> ${dto.url}`);
-    return this.mapToResponse(result.rows[0]);
+    return { ...this.mapToResponse(result.rows[0]), secreto };
   }
 
   async update(id: string, dto: UpdateWebhookDto): Promise<WebhookResponseDto> {
@@ -215,7 +215,7 @@ export class WebhooksService {
     );
 
     this.logger.log(`Secreto regenerado para webhook: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    return { ...this.mapToResponse(result.rows[0]), secreto: newSecret };
   }
 
   // Paginación completa para logs de webhooks
@@ -329,6 +329,11 @@ export class WebhooksService {
     return 'whsec_' + crypto.randomBytes(24).toString('hex');
   }
 
+  private maskSecret(secret: string): string {
+    if (!secret || secret.length < 12) return '***';
+    return `${secret.substring(0, 8)}${'*'.repeat(8)}${secret.substring(secret.length - 4)}`;
+  }
+
   private mapToResponse(row: Record<string, unknown>): WebhookResponseDto {
     return {
       id: row.id as string,
@@ -336,7 +341,7 @@ export class WebhooksService {
       url: row.url as string,
       eventos: row.eventos as string[],
       emisorId: row.emisor_id as string,
-      secreto: row.secreto as string,
+      secreto: this.maskSecret(row.secreto as string),
       activo: row.activo as boolean,
       reintentosMax: row.reintentos_max as number,
       createdAt: (row.created_at as Date)?.toISOString(),
