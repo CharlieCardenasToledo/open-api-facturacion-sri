@@ -64,3 +64,10 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 .agent
 skills-lock.json
 .windsurf
+
+# JCBV
+/cli-JCBV
+.venv
+.jcbv-memory
+.agent-skills
+AGENTS.md

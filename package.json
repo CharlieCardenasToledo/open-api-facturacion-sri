@@ -132,7 +132,19 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "modules/**/*.ts",
+      "common/**/*.ts",
+      "database/**/*.ts"
+    ],
+    "coveragePathIgnorePatterns": [
+      ".*\\.spec\\.ts$",
+      ".*\\.module\\.ts$",
+      ".*\\.dto\\.ts$",
+      ".*\\.interface\\.ts$",
+      ".*\\.enum\\.ts$",
+      ".*\\.constant\\.ts$",
+      ".*\\.decorator\\.ts$",
+      "main\\.ts$"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"

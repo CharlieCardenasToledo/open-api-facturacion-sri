@@ -320,6 +320,196 @@ describe('SriService — Consultas', () => {
       expect(item.total).toBe(115);
       expect(item.tipoComprobanteDescripcion).toBeDefined();
     });
+
+    it('U-LIST-11: filtro por identificacionComprador pasa al repositorio', async () => {
+      repository.findComprobantes.mockResolvedValue({
+        data: mockRows.slice(0, 3),
+        total: 3,
+      });
+
+      await service.listarComprobantes({
+        identificacionComprador: '1701234567',
+        page: 1,
+        limit: 20,
+      });
+
+      expect(repository.findComprobantes).toHaveBeenCalledWith(
+        expect.objectContaining({ identificacionComprador: '1701234567' }),
+      );
+    });
+
+    it('U-LIST-12: filtro por establecimiento pasa al repositorio', async () => {
+      repository.findComprobantes.mockResolvedValue({
+        data: mockRows.slice(0, 5),
+        total: 5,
+      });
+
+      await service.listarComprobantes({
+        establecimiento: '001',
+        page: 1,
+        limit: 20,
+      });
+
+      expect(repository.findComprobantes).toHaveBeenCalledWith(
+        expect.objectContaining({ establecimiento: '001' }),
+      );
+    });
+
+    it('U-LIST-13: filtro por puntoEmision pasa al repositorio', async () => {
+      repository.findComprobantes.mockResolvedValue({
+        data: mockRows.slice(0, 5),
+        total: 5,
+      });
+
+      await service.listarComprobantes({
+        puntoEmision: '002',
+        page: 1,
+        limit: 20,
+      });
+
+      expect(repository.findComprobantes).toHaveBeenCalledWith(
+        expect.objectContaining({ puntoEmision: '002' }),
+      );
+    });
+
+    it('U-LIST-14: filtro por emisorIds (multi-tenant) pasa al repositorio', async () => {
+      repository.findComprobantes.mockResolvedValue({
+        data: mockRows.slice(0, 7),
+        total: 7,
+      });
+
+      await service.listarComprobantes({
+        emisorIds: ['emisor-1', 'emisor-2'],
+        page: 1,
+        limit: 20,
+      });
+
+      expect(repository.findComprobantes).toHaveBeenCalledWith(
+        expect.objectContaining({ emisorIds: ['emisor-1', 'emisor-2'] }),
+      );
+    });
+
+    it('U-LIST-15: filtro por estados (array) pasa al repositorio', async () => {
+      repository.findComprobantes.mockResolvedValue({
+        data: mockRows.slice(0, 10),
+        total: 10,
+      });
+
+      await service.listarComprobantes({
+        estados: ['PENDIENTE', 'DEVUELTA'],
+        page: 1,
+        limit: 20,
+      });
+
+      expect(repository.findComprobantes).toHaveBeenCalledWith(
+        expect.objectContaining({ estados: ['PENDIENTE', 'DEVUELTA'] }),
+      );
+    });
+
+    it('U-LIST-16: offset calcula page correctamente', async () => {
+      repository.findComprobantes.mockResolvedValue({
+        data: mockRows.slice(0, 5),
+        total: 15,
+      });
+
+      await service.listarComprobantes({
+        offset: 40,
+        limit: 20,
+      });
+
+      expect(repository.findComprobantes).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 3, limit: 20 }),
+      );
+    });
+
+    it('U-LIST-17: page=2, limit=5 retorna meta con totalPages correcto', async () => {
+      repository.findComprobantes.mockResolvedValue({
+        data: mockRows.slice(5, 10),
+        total: 15,
+      });
+
+      const result = await service.listarComprobantes({ page: 2, limit: 5 });
+
+      expect(result.meta.page).toBe(2);
+      expect(result.meta.limit).toBe(5);
+      expect(result.meta.total).toBe(15);
+      expect(result.meta.totalPages).toBe(3);
+    });
+
+    it('U-LIST-18: nextCursor decodificado contiene createdAt e id del último item', async () => {
+      const extraRows = [...mockRows, ...mockRows.slice(0, 6).map((r, i) => ({
+        ...r,
+        id: `comp-extra-${i}`,
+        created_at: new Date(`2026-03-0${i + 1}`),
+      }))];
+      repository.findComprobantes.mockResolvedValue({
+        data: extraRows.slice(0, 21),
+        total: 21,
+      });
+
+      const result = await service.listarComprobantes({ page: 1, limit: 20 });
+
+      expect(result.hasMore).toBe(true);
+      expect(result.nextCursor).not.toBeNull();
+      const decoded = JSON.parse(Buffer.from(result.nextCursor!, 'base64').toString());
+      expect(decoded).toHaveProperty('createdAt');
+      expect(decoded).toHaveProperty('id');
+    });
+
+    it('U-LIST-19: cursor con datos vacíos no retorna meta.total', async () => {
+      repository.findComprobantes.mockResolvedValue({
+        data: [],
+        total: 0,
+      });
+
+      const result = await service.listarComprobantes({
+        cursor: 'eyJjcmVhdGVkQXQiOiIyMDI2LTAyLTA3IiwiaWQiOiJjb21wLTEifQ==',
+        limit: 10,
+      });
+
+      expect(result.meta.total).toBeUndefined();
+      expect(result.meta.totalPages).toBeUndefined();
+      expect(result.data).toEqual([]);
+    });
+
+    it('U-LIST-20: todos los filtros combinados pasan al repositorio', async () => {
+      repository.findComprobantes.mockResolvedValue({
+        data: mockRows.slice(0, 2),
+        total: 2,
+      });
+
+      await service.listarComprobantes({
+        rucEmisor: '0924383631001',
+        identificacionComprador: '1701234567',
+        tipoComprobante: '01',
+        estado: 'AUTORIZADO',
+        estados: ['AUTORIZADO'],
+        fechaDesde: '2026-01-01',
+        fechaHasta: '2026-02-28',
+        establecimiento: '001',
+        puntoEmision: '001',
+        emisorIds: ['emisor-1'],
+        page: 1,
+        limit: 50,
+      });
+
+      expect(repository.findComprobantes).toHaveBeenCalledWith(
+        expect.objectContaining({
+          rucEmisor: '0924383631001',
+          identificacionComprador: '1701234567',
+          tipoComprobante: '01',
+          estado: 'AUTORIZADO',
+          estados: ['AUTORIZADO'],
+          fechaDesde: '2026-01-01',
+          fechaHasta: '2026-02-28',
+          establecimiento: '001',
+          puntoEmision: '001',
+          emisorIds: ['emisor-1'],
+          page: 1,
+          limit: 50,
+        }),
+      );
+    });
   });
 
   // ==========================================
@@ -681,6 +871,94 @@ describe('SriService — Consultas', () => {
 
       await expect(service.reintentarComprobante(claveAcceso)).rejects.toThrow(BadRequestException);
     });
+
+    it('U-REI-08: estado PENDIENTE permite reintentar', async () => {
+      repository.findComprobanteByClaveAcceso.mockResolvedValue({
+        id: 'comp-1',
+        estado: 'PENDIENTE',
+        fecha_emision: '2026-02-07',
+      } as any);
+      repository.findXmlByComprobanteId.mockResolvedValue({
+        xml_firmado_path: '/path/to/signed.xml',
+      } as any);
+      xmlStorage.readXml.mockReturnValue('<factura>signed</factura>');
+      sriSoapClient.enviarYAutorizar.mockResolvedValue({
+        success: true,
+        estado: 'AUTORIZADO',
+        fechaAutorizacion: '2026-02-07T16:00:00Z',
+        numeroAutorizacion: 'AUTH-2',
+        xmlAutorizado: '<factura>autorizado</factura>',
+        mensajes: [],
+      } as any);
+      repository.updateComprobante.mockResolvedValue(undefined as any);
+      xmlStorage.saveXml.mockReturnValue('/path/to/autorizado.xml');
+      repository.saveXml.mockResolvedValue(undefined as any);
+
+      const result = await service.reintentarComprobante(claveAcceso);
+
+      expect(result.estado).toBe('AUTORIZADO');
+      expect(result.mensaje).toContain('autorizado');
+    });
+
+    it('U-REI-09: estado EN PROCESO permite reintentar', async () => {
+      repository.findComprobanteByClaveAcceso.mockResolvedValue({
+        id: 'comp-1',
+        estado: 'EN PROCESO',
+        fecha_emision: '2026-02-07',
+      } as any);
+      repository.findXmlByComprobanteId.mockResolvedValue({
+        xml_firmado_path: '/path/to/signed.xml',
+      } as any);
+      xmlStorage.readXml.mockReturnValue('<factura>signed</factura>');
+      sriSoapClient.enviarYAutorizar.mockResolvedValue({
+        success: false,
+        estado: 'DEVUELTA',
+        mensajes: [{ tipo: 'ERROR', identificador: 'ERR-1', mensaje: 'Error test' }],
+      } as any);
+      repository.updateComprobante.mockResolvedValue(undefined as any);
+
+      const result = await service.reintentarComprobante(claveAcceso);
+
+      expect(result.estado).toBe('DEVUELTA');
+      expect(result.errores).toBeDefined();
+      expect(result.errores![0]).toContain('ERR-1');
+    });
+
+    it('U-REI-10: estado RECIBIDA no permite reintentar', async () => {
+      repository.findComprobanteByClaveAcceso.mockResolvedValue({
+        id: 'comp-1',
+        estado: 'RECIBIDA',
+      } as any);
+
+      await expect(service.reintentarComprobante(claveAcceso)).rejects.toThrow(BadRequestException);
+    });
+
+    it('U-REI-11: resultado sin errores retorna errores=undefined', async () => {
+      repository.findComprobanteByClaveAcceso.mockResolvedValue({
+        id: 'comp-1',
+        estado: 'DEVUELTA',
+        fecha_emision: '2026-02-07',
+      } as any);
+      repository.findXmlByComprobanteId.mockResolvedValue({
+        xml_firmado_path: '/path/to/signed.xml',
+      } as any);
+      xmlStorage.readXml.mockReturnValue('<factura>signed</factura>');
+      sriSoapClient.enviarYAutorizar.mockResolvedValue({
+        success: true,
+        estado: 'AUTORIZADO',
+        fechaAutorizacion: '2026-02-07T18:00:00Z',
+        numeroAutorizacion: 'AUTH-3',
+        xmlAutorizado: '<factura>autorizado</factura>',
+        mensajes: [],
+      } as any);
+      repository.updateComprobante.mockResolvedValue(undefined as any);
+      xmlStorage.saveXml.mockReturnValue('/path/to/autorizado.xml');
+      repository.saveXml.mockResolvedValue(undefined as any);
+
+      const result = await service.reintentarComprobante(claveAcceso);
+
+      expect(result.errores).toBeUndefined();
+    });
   });
 
   // ==========================================
@@ -803,6 +1081,57 @@ describe('SriService — Consultas', () => {
       const result = await service.verificarEnSri(claveAcceso);
 
       expect(result.estado).toBe('AUTORIZADO');
+    });
+
+    it('U-VER-08: mensaje singular (no array) se mapea correctamente', async () => {
+      repository.findComprobanteByClaveAcceso.mockResolvedValue({ id: 'comp-1', estado: 'DEVUELTA' } as any);
+      sriSoapClient.autorizarComprobante.mockResolvedValue({
+        autorizaciones: {
+          autorizacion: {
+            estado: 'DEVUELTA',
+            mensajes: { mensaje: { tipo: 'ERROR', identificador: 'ERR-99', mensaje: 'Single mensaje' } },
+          },
+        },
+      } as any);
+
+      const result = await service.verificarEnSri(claveAcceso);
+
+      expect(result.mensajes).toBeDefined();
+      expect(result.mensajes).toHaveLength(1);
+      expect(result.mensajes![0]).toContain('ERR-99');
+    });
+
+    it('U-VER-09: sin comprobante local retorna estadoLocal=undefined', async () => {
+      repository.findComprobanteByClaveAcceso.mockResolvedValue(null as any);
+      sriSoapClient.autorizarComprobante.mockResolvedValue({
+        autorizaciones: {
+          autorizacion: {
+            estado: 'AUTORIZADO',
+            fechaAutorizacion: '2026-02-07T20:00:00Z',
+            numeroAutorizacion: 'AUTH-9',
+          },
+        },
+      } as any);
+
+      const result = await service.verificarEnSri(claveAcceso);
+
+      expect(result.estadoLocal).toBeUndefined();
+      expect(result.sincronizado).toBe(false);
+    });
+
+    it('U-VER-10: estado DESCONOCIDO cuando auth.estado es null', async () => {
+      repository.findComprobanteByClaveAcceso.mockResolvedValue({ id: 'comp-1', estado: 'PENDIENTE' } as any);
+      sriSoapClient.autorizarComprobante.mockResolvedValue({
+        autorizaciones: {
+          autorizacion: {
+            estado: null,
+          },
+        },
+      } as any);
+
+      const result = await service.verificarEnSri(claveAcceso);
+
+      expect(result.estado).toBe('DESCONOCIDO');
     });
   });
 

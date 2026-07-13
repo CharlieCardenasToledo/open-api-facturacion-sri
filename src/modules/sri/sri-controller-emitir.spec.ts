@@ -9,6 +9,12 @@ import { CreateFacturaDto } from './dto';
 import { TipoIdentificacion, FormaPago } from './constants';
 
 /**
+ * Tests unitarios para SriController endpoints de emisión y validación
+ * Cubre: emitirFactura, emitirNotaCredito, emitirNotaDebito, emitirRetencion,
+ * emitirGuiaRemision, previewFactura, debugFacturaFirmada, consultarAutorizacion, validarXml
+ */
+
+/**
  * Tests unitarios para SriController endpoints de emisión de factura
  * Cubre: emitirFactura, previewFactura, debugFacturaFirmada
  */
@@ -63,8 +69,14 @@ describe('SriController — Emisión Factura', () => {
           provide: SriService,
           useValue: {
             emitirFactura: jest.fn(),
+            emitirNotaCredito: jest.fn(),
+            emitirNotaDebito: jest.fn(),
+            emitirRetencion: jest.fn(),
+            emitirGuiaRemision: jest.fn(),
             generarXmlPreview: jest.fn(),
             generarFacturaFirmadaDebug: jest.fn(),
+            consultarAutorizacion: jest.fn(),
+            validarXml: jest.fn(),
             listarComprobantes: jest.fn(),
             obtenerComprobante: jest.fn(),
             obtenerXmlAutorizado: jest.fn(),
@@ -168,14 +180,20 @@ describe('SriController — Emisión Factura', () => {
   // ==========================================
   // U-CTRL-EMI-06: debugFacturaFirmada en test (no production)
   // ==========================================
-  it('U-CTRL-EMI-06: debugFacturaFirmada funciona en entorno no-producción', async () => {
+  it('U-CTRL-EMI-06: debugFacturaFirmada funciona en entorno no-producción con SUPERADMIN', async () => {
+    const superadmin: JwtPayload = {
+      sub: 'admin-1',
+      email: 'admin@test.com',
+      rol: UserRole.SUPERADMIN,
+      tenantId: null,
+    };
     sriService.generarFacturaFirmadaDebug.mockResolvedValue({
       claveAcceso: '0702202601092438363100110010010000000161245294013',
       xmlSinFirma: '<xml/>',
       xmlFirmado: '<xml signed/>',
     });
 
-    const result = await controller.debugFacturaFirmada(createValidDto(), adminUser);
+    const result = await controller.debugFacturaFirmada(createValidDto(), superadmin);
 
     expect(result.claveAcceso).toHaveLength(49);
     expect(result.xmlFirmado).toBeDefined();
@@ -227,5 +245,125 @@ describe('SriController — Emisión Factura', () => {
     sriService.emitirFactura.mockRejectedValue(new BadRequestException('Certificado no encontrado'));
 
     await expect(controller.emitirFactura(createValidDto(), adminUser)).rejects.toThrow(BadRequestException);
+  });
+
+  // ==========================================
+  // U-CTRL-EMI-11: emitirNotaCredito valida RUC y delega al servicio
+  // ==========================================
+  it('U-CTRL-EMI-11: emitirNotaCredito valida RUC access y delega a sriService', async () => {
+    sriService.emitirNotaCredito.mockResolvedValue({
+      success: true,
+      claveAcceso: '0702202601092438363100110010010000000161245294013',
+      estado: 'AUTORIZADO',
+    } as any);
+
+    const dto = { ...createValidDto(), infoNotaCredito: {} } as any;
+    const result = await controller.emitirNotaCredito(dto, adminUser);
+
+    expect(emisoresService.validateRucAccess).toHaveBeenCalledWith('0924383631001', adminUser);
+    expect(sriService.emitirNotaCredito).toHaveBeenCalled();
+    expect((result as any).success).toBe(true);
+  });
+
+  // ==========================================
+  // U-CTRL-EMI-12: emitirNotaDebito valida RUC y delega al servicio
+  // ==========================================
+  it('U-CTRL-EMI-12: emitirNotaDebito valida RUC access y delega a sriService', async () => {
+    sriService.emitirNotaDebito.mockResolvedValue({
+      success: true,
+      claveAcceso: '0702202601092438363100110010010000000161245294013',
+      estado: 'AUTORIZADO',
+    } as any);
+
+    const dto = { ...createValidDto(), infoNotaDebito: {}, motivos: [] } as any;
+    const result = await controller.emitirNotaDebito(dto, adminUser);
+
+    expect(emisoresService.validateRucAccess).toHaveBeenCalledWith('0924383631001', adminUser);
+    expect(sriService.emitirNotaDebito).toHaveBeenCalled();
+    expect((result as any).success).toBe(true);
+  });
+
+  // ==========================================
+  // U-CTRL-EMI-13: emitirRetencion valida RUC y delega al servicio
+  // ==========================================
+  it('U-CTRL-EMI-13: emitirRetencion valida RUC access y delega a sriService', async () => {
+    sriService.emitirRetencion.mockResolvedValue({
+      success: true,
+      claveAcceso: '0702202601092438363100110010010000000161245294013',
+      estado: 'AUTORIZADO',
+    } as any);
+
+    const dto = { ...createValidDto(), sujetoRetenido: {}, impuestosDocSustento: [], impuestosRetenidos: [] } as any;
+    const result = await controller.emitirRetencion(dto, adminUser);
+
+    expect(emisoresService.validateRucAccess).toHaveBeenCalledWith('0924383631001', adminUser);
+    expect(sriService.emitirRetencion).toHaveBeenCalled();
+    expect((result as any).success).toBe(true);
+  });
+
+  // ==========================================
+  // U-CTRL-EMI-14: emitirGuiaRemision valida RUC y delega al servicio
+  // ==========================================
+  it('U-CTRL-EMI-14: emitirGuiaRemision valida RUC access y delega a sriService', async () => {
+    sriService.emitirGuiaRemision.mockResolvedValue({
+      success: true,
+      claveAcceso: '0702202601092438363100110010010000000161245294013',
+      estado: 'AUTORIZADO',
+    } as any);
+
+    const dto = { ...createValidDto(), infoGuiaRemision: {}, destinatarios: [], detalles: [] } as any;
+    const result = await controller.emitirGuiaRemision(dto, adminUser);
+
+    expect(emisoresService.validateRucAccess).toHaveBeenCalledWith('0924383631001', adminUser);
+    expect(sriService.emitirGuiaRemision).toHaveBeenCalled();
+    expect((result as any).success).toBe(true);
+  });
+
+  // ==========================================
+  // U-CTRL-EMI-15: consultarAutorizacion delega al servicio sin validación de RUC
+  // ==========================================
+  it('U-CTRL-EMI-15: consultarAutorizacion delega al servicio', async () => {
+    sriService.consultarAutorizacion.mockResolvedValue({
+      success: true,
+      claveAcceso: '0702202601092438363100110010010000000161245294013',
+      estado: 'AUTORIZADO',
+    } as any);
+
+    const result = await controller.consultarAutorizacion('0702202601092438363100110010010000000161245294013', adminUser);
+
+    expect(sriService.consultarAutorizacion).toHaveBeenCalledWith('0702202601092438363100110010010000000161245294013');
+    expect((result as any).success).toBe(true);
+  });
+
+  // ==========================================
+  // U-CTRL-EMI-16: validarXml sin archivo retorna error
+  // ==========================================
+  it('U-CTRL-EMI-16: validarXml sin archivo retorna valido=false', async () => {
+    const result = await controller.validarXml(undefined as any);
+
+    expect(result.valido).toBe(false);
+    expect(result.errores).toHaveLength(1);
+    expect(result.errores[0]).toContain('No se ha adjuntado');
+  });
+
+  // ==========================================
+  // U-CTRL-EMI-17: validarXml con archivo delega al servicio
+  // ==========================================
+  it('U-CTRL-EMI-17: validarXml con archivo XML delega al servicio', async () => {
+    const mockFile = { buffer: Buffer.from('<?xml version="1.0"?><factura/>') } as Express.Multer.File;
+    sriService.validarXml.mockResolvedValue({ valido: true, errores: [] });
+
+    const result = await controller.validarXml(mockFile);
+
+    expect(sriService.validarXml).toHaveBeenCalledWith('<?xml version="1.0"?><factura/>');
+    expect(result.valido).toBe(true);
+  });
+
+  // ==========================================
+  // U-CTRL-EMI-18: debugFacturaFirmada con ADMIN (no SUPERADMIN) lanza ForbiddenException
+  // ==========================================
+  it('U-CTRL-EMI-18: debugFacturaFirmada con ADMIN lanza ForbiddenException', async () => {
+    await expect(controller.debugFacturaFirmada(createValidDto(), adminUser)).rejects.toThrow(ForbiddenException);
+    expect(sriService.generarFacturaFirmadaDebug).not.toHaveBeenCalled();
   });
 });

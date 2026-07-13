@@ -81,8 +81,8 @@ export class AuthService {
         throw new UnauthorizedException('Token inválido para refrescar sesión');
       }
 
-      // Validar que el usuario sigue activo en la BD
-      await this.validatePayload(payload);
+      // Validar que el usuario sigue activo en la BD (permitir refresh tokens)
+      await this.validatePayload(payload, true);
 
       return this.generateTokens(payload);
     } catch (error: any) {
@@ -220,7 +220,7 @@ export class AuthService {
   /**
    * Valida un payload JWT y retorna el usuario (usado por JwtStrategy)
    */
-  async validatePayload(payload: JwtPayload): Promise<JwtPayload> {
+  async validatePayload(payload: JwtPayload, allowRefreshToken = false): Promise<JwtPayload> {
     const user = await this.db.queryOne<{ id: string; activo: boolean }>(
       'SELECT id, activo FROM usuarios WHERE id = $1',
       [payload.sub],
@@ -230,7 +230,7 @@ export class AuthService {
       throw new UnauthorizedException('Token inválido o usuario inactivo');
     }
 
-    if (payload.type === 'refresh') {
+    if (payload.type === 'refresh' && !allowRefreshToken) {
       // Las estrategias de autenticación normales (JWT Guard) no deberían aceptar refresh tokens
       throw new UnauthorizedException('Token de refresco no permitido para acceder a recursos');
     }
