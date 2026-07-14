@@ -34,8 +34,8 @@ FROM node:22-alpine AS production
 ENV NODE_ENV=production
 ENV TZ=America/Guayaquil
 
-# Install tzdata for timezone support
-RUN apk add --no-cache tzdata
+# Install tzdata for timezone support and su-exec for privilege dropping
+RUN apk add --no-cache tzdata su-exec
 
 # Set working directory
 WORKDIR /app
@@ -58,7 +58,9 @@ RUN addgroup -g 1001 -S appgroup && \
     adduser -u 1001 -S appuser -G appgroup && \
     chown -R appuser:appgroup /app /data
 
-USER appuser
+# Copy entrypoint script (fixes bind-mount permissions then drops to appuser)
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
 
 # Expose the application port
 EXPOSE 3001
@@ -67,5 +69,6 @@ EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3001/status || exit 1
 
-# Start the application
+# Entrypoint fixes volume permissions as root, then drops to appuser via su-exec
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["node", "dist/main"]
