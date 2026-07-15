@@ -52,7 +52,7 @@ async function bootstrap() {
       callback(new Error('CORS: Origen no permitido'));
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'X-Output-Format'],
     credentials: true,
   });
 

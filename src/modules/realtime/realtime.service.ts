@@ -110,6 +110,18 @@ export class RealtimeService {
     }, payload.tenantId);
   }
 
+  @OnEvent('comprobante.persistencia_fallida')
+  handleComprobantePersistenciaFallida(payload: any): void {
+    this.logger.warn(
+      `Persistencia fallida para comprobante ${payload.claveAcceso}`,
+    );
+    this.broadcast('comprobante.persistencia_fallida', {
+      claveAcceso: payload.claveAcceso,
+      tipoComprobante: payload.tipoComprobante,
+      emisorRuc: payload.emisorRuc,
+    }, payload.tenantId);
+  }
+
   @OnEvent('plantilla.creada')
   handlePlantillaCreada(payload: any): void {
     this.broadcast('plantilla.creada', payload);

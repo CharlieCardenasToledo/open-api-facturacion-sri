@@ -71,6 +71,8 @@ export class WebhooksController {
           'Cuando un comprobante es rechazado por el SRI',
         'comprobante.anulado': 'Cuando un comprobante es anulado',
         'comprobante.enviado': 'Cuando un comprobante es enviado al SRI',
+        'comprobante.persistencia_fallida':
+          'Cuando falla la persistencia de un comprobante autorizado',
         'certificado.por_vencer':
           'Cuando un certificado está por vencer (30 días)',
         'certificado.vencido': 'Cuando un certificado ha vencido',

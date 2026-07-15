@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "103b712a-cb2a-4bb0-9fff-d6db874c9c24",
     "name": "SRI-EC | API",
-    "description": "Health check y autenticación JWT.\n\nCredenciales por defecto:\n- Email: superadmin@openapi-sri.com\n- Password: Admin123!\n\nRoles: SUPERADMIN, ADMIN, USER",
+    "description": "Health check y autenticación JWT.\n\nCredenciales por defecto:\n- Email: superadmin@apicore-sri-ec.com\n- Password: Admin123!\n\nRoles: SUPERADMIN, ADMIN, USER\n\nPuerto por defecto: 3001",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "15427023",
     "_collection_link": "https://go.postman.co/collection/15427023-103b712a-cb2a-4bb0-9fff-d6db874c9c24?source=collection_link"
@@ -85,7 +85,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"superadmin@openapi-sri.com\",\n  \"password\": \"Admin123!\"\n}",
+              "raw": "{\n  \"email\": \"superadmin@apicore-sri-ec.com\",\n  \"password\": \"Admin123!\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1750,7 +1750,7 @@
                 "eventos"
               ]
             },
-            "description": "Lista todos los eventos disponibles para suscripción: comprobante.creado, comprobante.autorizado, comprobante.rechazado, comprobante.anulado, comprobante.enviado, certificado.por_vencer, certificado.vencido."
+            "description": "Lista todos los eventos disponibles para suscripción: comprobante.creado, comprobante.autorizado, comprobante.rechazado, comprobante.anulado, comprobante.enviado, comprobante.persistencia_fallida, certificado.por_vencer, certificado.vencido."
           },
           "response": []
         }
@@ -2313,6 +2313,40 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "18.- Realtime (SSE)",
+      "item": [
+        {
+          "name": "GET /realtime/events — Stream SSE",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/realtime/events?token={{token}}",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "realtime",
+                "events"
+              ],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "description": "JWT access token (requerido para autenticar SSE)"
+                }
+              ]
+            },
+            "description": "Stream Server-Sent Events para eventos en tiempo real. Requiere token JWT como query param.\n\nEventos transmitidos:\n- comprobante.autorizado\n- comprobante.rechazado\n- comprobante.creado\n- comprobante.anulado\n- comprobante.persistencia_fallida\n- plantilla.creada\n- plantilla.eliminada\n- certificado.subido\n- certificado.eliminado\n\nNota: En Postman, usar 'Body' > 'SSE' para visualizar eventos."
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "auth": {
@@ -2328,7 +2362,7 @@
   "variable": [
     {
       "key": "url",
-      "value": "http://localhost:3000"
+      "value": "http://localhost:3001"
     },
     {
       "key": "token",
@@ -2356,6 +2390,18 @@
     },
     {
       "key": "webhook_id",
+      "value": ""
+    },
+    {
+      "key": "template_id",
+      "value": ""
+    },
+    {
+      "key": "cert_file",
+      "value": ""
+    },
+    {
+      "key": "cert_password",
       "value": ""
     }
   ]

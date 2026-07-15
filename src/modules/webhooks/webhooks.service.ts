@@ -54,6 +54,18 @@ export class WebhooksService {
     );
   }
 
+  @OnEvent('comprobante.persistencia_fallida')
+  async handleComprobantePersistenciaFallida(payload: any) {
+    this.logger.warn(
+      `Evento comprobante.persistencia_fallida recibido para ${payload.claveAcceso}`,
+    );
+    await this.emit(
+      'comprobante.persistencia_fallida' as WebhookEvent,
+      payload,
+      payload.emisorId,
+    );
+  }
+
   // =====================
   // CRUD Operations
   // =====================

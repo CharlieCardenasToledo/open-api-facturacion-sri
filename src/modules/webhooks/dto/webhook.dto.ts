@@ -17,6 +17,7 @@ export const WEBHOOK_EVENTS = [
   'comprobante.rechazado',
   'comprobante.anulado',
   'comprobante.enviado',
+  'comprobante.persistencia_fallida',
   'certificado.por_vencer',
   'certificado.vencido',
 ] as const;
